@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>sortition &bull; hubs for random-ish values</title>
+        <style>
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                font-size: 16px;
+                color: white;
+                font-family: Helvetica, Arial, sans-serif;
+            }
+
+            .root .createBtn {
+                display: none;
+            }
+            .root .loader {
+                display: none;
+            }
+            .root .response {
+                display: none;
+            }
+            .root .error {
+                display: none;
+            }
+
+            .root.init .createBtn {
+                display: block;
+            }
+            .root.loading .loader {
+                display: block;
+            }
+            .root.complete .response {
+                display: block;
+            }
+            .root.error .error {
+                display: block;
+            }
+
+            .root {
+                height: 100%;
+                background: black;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .createBtn,
+            .copyBtn {
+                font-size: 1.2rem;
+                padding: 1rem;
+                border-radius: 4px;
+                background: transparent;
+                color: white;
+                border: solid 2px white;
+                margin: 0;
+                cursor: pointer;
+                transition: background 500ms;
+            }
+
+            .createBtn:hover,
+            .copyBtn:hover {
+                background: #222;
+            }
+
+            .loader {
+                display: inline-block;
+                position: relative;
+                width: 80px;
+                height: 80px;
+            }
+            .loader div {
+                position: absolute;
+                border: 4px solid #fff;
+                opacity: 1;
+                border-radius: 50%;
+                animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            }
+            .loader div:nth-child(2) {
+                animation-delay: -0.5s;
+            }
+            @keyframes loader {
+                0% {
+                    top: 36px;
+                    left: 36px;
+                    width: 0;
+                    height: 0;
+                    opacity: 1;
+                }
+                100% {
+                    top: 0px;
+                    left: 0px;
+                    width: 72px;
+                    height: 72px;
+                    opacity: 0;
+                }
+            }
+            .response {
+                text-align: center;
+            }
+
+            .hubUrl,
+            .expires {
+                margin: 0;
+                padding: 2rem 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root" class="root">
+            <noscript>
+                Unfortunately, without JavaScript, you cannot use this page.
+            </noscript>
+            <button class="createBtn" id="createBtn">Create New Hub</button>
+            <div class="loader" id="loader">
+                <div></div>
+                <div></div>
+            </div>
+            <div class="response" id="response">
+                <p id="hubUrl" class="hubUrl"></p>
+                <button class="copyBtn" id="copyBtn">Copy URL</button>
+                <p id="expires" class="expires"></p>
+            </div>
+            <p class="error" id="error"></p>
+        </div>
+        <script>
+            ;(() => {
+                function el(selector) {
+                    return document.querySelector(selector)
+                }
+
+                const root = el("#root")
+                const createBtn = el("#createBtn")
+                const loader = el("#loader")
+                const copyBtn = el("#copyBtn")
+                const response = el("#response")
+                const hubUrl = el("#hubUrl")
+                const expires = el("#expires")
+                const error = el("#error")
+
+                root.classList.add("init")
+
+                function setValues(id) {
+                    hubUrl.textContent = `${window.location.href}${id}`
+                    const d = new Date()
+                    d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
+                    expires.textContent = `Expires: ${d.toLocaleString()}`
+                }
+
+                async function parseId(uuid) {
+                    let s = "" + uuid
+
+                    s = s.match(
+                        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                    )
+                    if (s === null) {
+                        throw Error("Data is malformed.")
+                    }
+                    return uuid
+                }
+
+                createBtn.addEventListener("click", () => {
+                    root.classList.remove("init")
+                    root.classList.add("loading")
+
+                    fetch("", { method: "POST" })
+                        .then((data) => data.text())
+                        .then(parseId)
+                        .then((id) => {
+                            setValues(id)
+                            root.classList.remove("loading")
+                            root.classList.add("complete")
+                        })
+                        .catch((err) => {
+                            root.classList.remove("loading")
+                            root.classList.add("error")
+                            error.textContent = err.message
+                        })
+                })
+
+                copyBtn.addEventListener("click", () => {
+                    const el = document.createElement("textarea")
+                    el.value = hubUrl.textContent
+                    el.setAttribute("readonly", "")
+                    el.style.position = "absolute"
+                    el.style.left = "-9999px"
+                    document.body.appendChild(el)
+                    const sel = document.getSelection()
+                    const selected =
+                        sel !== null && sel.rangeCount > 0
+                            ? sel.getRangeAt(0)
+                            : false
+                    el.select()
+                    document.execCommand("copy")
+                    document.body.removeChild(el)
+                    if (sel && selected) {
+                        sel.removeAllRanges()
+                        sel.addRange(selected)
+                    }
+
+                    copyBtn.textContent = "Copied!"
+                })
+            })()
+        </script>
+    </body>
+</html>

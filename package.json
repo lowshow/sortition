@@ -1,0 +1,23 @@
+{
+  "name": "sortition",
+  "version": "0.0.0",
+  "description": "experimental pluggable hub server to validate data, then randomly return it",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^13.11.1",
+    "@types/sqlite3": "^3.1.6",
+    "prettier": "^2.0.4",
+    "tslint": "^6.1.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.8.3"
+  },
+  "dependencies": {
+    "sqlite3": "^4.1.1",
+    "uuidv4": "^6.0.7"
+  }
+}
