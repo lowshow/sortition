@@ -12,12 +12,12 @@ function validateAdd(request) {
     return new Promise((resolve, reject) => {
         const { headers } = request;
         const type = headers["content-type"] || "";
-        const size = parseInt(headers["content-length"] || "101", 10);
+        const size = parseInt(headers["content-length"] || "1025", 10);
         let downloaded = 0;
         if (headers["content-type"] !== "text/plain") {
             reject(`Incorrect content type ${type}`);
         }
-        else if (size > 100) {
+        else if (size > 1024) {
             reject("Too much data");
         }
         else {
@@ -26,7 +26,7 @@ function validateAdd(request) {
             request.on("data", (chunk) => {
                 downloaded += chunk.length;
                 data.push(chunk);
-                if (downloaded > 100) {
+                if (downloaded > 1024) {
                     request.destroy(Error("Too much data"));
                     reject("Too much data");
                 }

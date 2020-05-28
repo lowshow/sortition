@@ -42,6 +42,9 @@ function handleBaseRequests(request, response, dbActions, html) {
                 response.end();
             });
             break;
+        case "OPTIONS":
+            response.writeHead(200);
+            response.end();
         default:
             response.statusCode = 405;
             response.statusMessage = `Not handled: ${request.method}`;
@@ -72,7 +75,10 @@ function handleHubRequests(request, response, dbActions, hubId, handlers) {
             })
                 .catch((err) => {
                 response.statusCode = 400;
-                response.statusMessage = err.message;
+                response.statusMessage =
+                    err.message ||
+                        err ||
+                        "Bad request";
                 response.end();
             });
             break;
@@ -89,11 +95,21 @@ function handleHubRequests(request, response, dbActions, hubId, handlers) {
                 response.end();
             });
             break;
+        case "OPTIONS":
+            response.writeHead(200);
+            response.end();
         default:
             response.statusCode = 405;
             response.statusMessage = `${request.method}`;
             response.end();
     }
+}
+// TODO: add doc
+function setCors(response) {
+    response.setHeader("Access-Control-Allow-Origin", "*");
+    response.setHeader("Access-Control-Request-Method", "*");
+    response.setHeader("Access-Control-Allow-Methods", "OPTIONS, GET, PUT, DELETE");
+    response.setHeader("Access-Control-Allow-Headers", "*");
 }
 // TODO: add doc
 function requestListener(dbActions, handlers, html) {
@@ -108,6 +124,7 @@ function requestListener(dbActions, handlers, html) {
             handleBaseRequests(request, response, dbActions, html);
         }
         else {
+            setCors(response);
             const uuid = url.split("/")[1];
             const valid = uuidv4_1.isUuid(uuid);
             if (!valid) {

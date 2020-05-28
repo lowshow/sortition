@@ -45,6 +45,9 @@ function handleBaseRequests(
                     response.end()
                 })
             break
+        case "OPTIONS":
+            response.writeHead(200)
+            response.end()
         default:
             response.statusCode = 405
             response.statusMessage = `Not handled: ${request.method}`
@@ -83,9 +86,12 @@ function handleHubRequests(
                 .then((data: DataItem): void => {
                     handlers[0].onAdd(request, response, data)
                 })
-                .catch((err: Error): void => {
+                .catch((err: Error | string): void => {
                     response.statusCode = 400
-                    response.statusMessage = err.message
+                    response.statusMessage =
+                        (err as Error).message ||
+                        (err as string) ||
+                        "Bad request"
                     response.end()
                 })
             break
@@ -105,11 +111,25 @@ function handleHubRequests(
                     response.end()
                 })
             break
+        case "OPTIONS":
+            response.writeHead(200)
+            response.end()
         default:
             response.statusCode = 405
             response.statusMessage = `${request.method}`
             response.end()
     }
+}
+
+// TODO: add doc
+function setCors(response: ServerResponse): void {
+    response.setHeader("Access-Control-Allow-Origin", "*")
+    response.setHeader("Access-Control-Request-Method", "*")
+    response.setHeader(
+        "Access-Control-Allow-Methods",
+        "OPTIONS, GET, PUT, DELETE"
+    )
+    response.setHeader("Access-Control-Allow-Headers", "*")
 }
 
 // TODO: add doc
@@ -127,6 +147,7 @@ function requestListener(
         } else if (url === "/") {
             handleBaseRequests(request, response, dbActions, html)
         } else {
+            setCors(response)
             const uuid: string = url.split("/")[1]
             const valid: boolean = isUuid(uuid)
             if (!valid) {
