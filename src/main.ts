@@ -140,7 +140,7 @@ function requestListener(
 ): (request: IncomingMessage, response: ServerResponse) => void {
     return (request: IncomingMessage, response: ServerResponse): void => {
         const { url }: IncomingMessage = request
-        if (!url || url.length > 37) {
+        if (!url || url.length > 1024) {
             response.statusCode = 404
             response.statusMessage = "Invalid path"
             response.end()
