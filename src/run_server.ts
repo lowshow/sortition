@@ -3,6 +3,7 @@
 import { main, FinishState } from "./main"
 import process from "process"
 import path from "path"
+import fs from "fs"
 
 // TODO: add doc
 export type EndEvent = NodeJS.Signals | "uncaughtException"
@@ -10,7 +11,7 @@ export type EndEvent = NodeJS.Signals | "uncaughtException"
 // TODO: add doc
 interface State {
     port: number
-    dbPath: string
+    rootDir: string
     onExit: (() => Promise<void>)[]
 }
 
@@ -72,13 +73,18 @@ function parsePath(maybePath?: string): string {
 function run(): void {
     const state: State = {
         port: parsePort(process.argv.slice(2)[0]),
-        dbPath: parsePath(process.argv.slice(2)[1]),
+        rootDir: parsePath(process.argv.slice(2)[1]),
         onExit: []
+    }
+
+    const dbPath: string = path.join(state.rootDir, "db")
+    if (!fs.existsSync(dbPath)) {
+        fs.closeSync(fs.openSync(dbPath, "w"))
     }
 
     setProcessListener((): (() => Promise<void>)[] => state.onExit)
 
-    main(state.port, state.dbPath, (fn: () => Promise<void>): void => {
+    main(state.port, dbPath, (fn: () => Promise<void>): void => {
         state.onExit.push(fn)
     })
         .then((res: FinishState | void): void => {

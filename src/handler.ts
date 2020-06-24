@@ -18,12 +18,12 @@ function validateAdd(request: IncomingMessage): Promise<string> {
     return new Promise((resolve: Resolve<string>, reject: Reject): void => {
         const { headers }: IncomingMessage = request
         const type: string = headers["content-type"] || ""
-        const size: number = parseInt(headers["content-length"] || "101", 10)
+        const size: number = parseInt(headers["content-length"] || "1025", 10)
         let downloaded: number = 0
 
         if (headers["content-type"] !== "text/plain") {
             reject(`Incorrect content type ${type}`)
-        } else if (size > 100) {
+        } else if (size > 1024) {
             reject("Too much data")
         } else {
             const data: any[] = []
@@ -31,7 +31,7 @@ function validateAdd(request: IncomingMessage): Promise<string> {
             request.on("data", (chunk: any): void => {
                 downloaded += chunk.length
                 data.push(chunk)
-                if (downloaded > 100) {
+                if (downloaded > 1024) {
                     request.destroy(Error("Too much data"))
                     reject("Too much data")
                 }

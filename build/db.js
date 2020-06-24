@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.getDBActions = exports.initDb = void 0;
 const uuidv4_1 = require("uuidv4");
 const utils_1 = require("./common/utils");
 // TODO: add doc

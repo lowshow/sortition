@@ -6,8 +6,6 @@ import { initDb, DBActions, getDBActions } from "./db"
 import { urlHandler } from "./handler"
 import { sleep } from "./common/utils"
 import { Socket } from "net"
-import { readFile } from "fs"
-import path from "path"
 
 // TODO: add doc
 export enum FinishState {
@@ -20,15 +18,9 @@ export enum FinishState {
 function handleBaseRequests(
     request: IncomingMessage,
     response: ServerResponse,
-    dbActions: DBActions,
-    html: string
+    dbActions: DBActions
 ): void {
     switch (request.method) {
-        case "GET":
-            response.writeHead(200, { "Content-Type": "text/html" })
-            response.write(html)
-            response.end()
-            break
         case "POST":
             dbActions
                 .createHub()
@@ -45,6 +37,9 @@ function handleBaseRequests(
                     response.end()
                 })
             break
+        case "OPTIONS":
+            response.writeHead(200)
+            response.end()
         default:
             response.statusCode = 405
             response.statusMessage = `Not handled: ${request.method}`
@@ -83,9 +78,12 @@ function handleHubRequests(
                 .then((data: DataItem): void => {
                     handlers[0].onAdd(request, response, data)
                 })
-                .catch((err: Error): void => {
+                .catch((err: Error | string): void => {
                     response.statusCode = 400
-                    response.statusMessage = err.message
+                    response.statusMessage =
+                        (err as Error).message ||
+                        (err as string) ||
+                        "Bad request"
                     response.end()
                 })
             break
@@ -105,6 +103,9 @@ function handleHubRequests(
                     response.end()
                 })
             break
+        case "OPTIONS":
+            response.writeHead(200)
+            response.end()
         default:
             response.statusCode = 405
             response.statusMessage = `${request.method}`
@@ -113,20 +114,31 @@ function handleHubRequests(
 }
 
 // TODO: add doc
+function setCors(response: ServerResponse): void {
+    response.setHeader("Access-Control-Allow-Origin", "*")
+    response.setHeader("Access-Control-Request-Method", "*")
+    response.setHeader(
+        "Access-Control-Allow-Methods",
+        "OPTIONS, GET, PUT, DELETE"
+    )
+    response.setHeader("Access-Control-Allow-Headers", "*")
+}
+
+// TODO: add doc
 function requestListener(
     dbActions: DBActions,
-    handlers: Handler[],
-    html: string
+    handlers: Handler[]
 ): (request: IncomingMessage, response: ServerResponse) => void {
     return (request: IncomingMessage, response: ServerResponse): void => {
         const { url }: IncomingMessage = request
-        if (!url || url.length > 37) {
+        if (!url || url.length > 1024) {
             response.statusCode = 404
             response.statusMessage = "Invalid path"
             response.end()
-        } else if (url === "/") {
-            handleBaseRequests(request, response, dbActions, html)
+        } else if (url === "/create") {
+            handleBaseRequests(request, response, dbActions)
         } else {
+            setCors(response)
             const uuid: string = url.split("/")[1]
             const valid: boolean = isUuid(uuid)
             if (!valid) {
@@ -147,47 +159,39 @@ export async function main(
     onExit: (fn: () => Promise<void>) => void
 ): Promise<FinishState | void> {
     try {
-        readFile(
-            path.resolve(__dirname, "..", "static", "page.html"),
-            { encoding: "utf8" },
-            (err: Error | null, html: string): void => {
-                if (err) throw err
+        const handlers: Handler[] = [urlHandler()]
 
-                const handlers: Handler[] = [urlHandler()]
+        const db: Database = new Database(dbPath)
 
-                const db: Database = new Database(dbPath)
+        const server: Server = createServer(
+            requestListener(getDBActions(initDb(db)), handlers)
+        )
+        server.keepAliveTimeout = 0
 
-                const server: Server = createServer(
-                    requestListener(getDBActions(initDb(db)), handlers, html)
-                )
-                server.keepAliveTimeout = 0
-
-                onExit(
-                    async (): Promise<void> => {
-                        console.log("\nClosing server and DB")
-                        server.on("connection", (socket: Socket): void => {
-                            socket.end("", (): void => {
-                                socket.destroy()
-                            })
-                        })
-                        let count: number = 0
-                        while (server.connections > 0) {
-                            if (count > 4) {
-                                break
-                            }
-                            await sleep(0.2)
-                            count += 1
-                        }
-                        server.close()
-                        console.log("Server closed")
-                        db.close()
-                        console.log("DB closed")
+        onExit(
+            async (): Promise<void> => {
+                console.log("\nClosing server and DB")
+                server.on("connection", (socket: Socket): void => {
+                    socket.end("", (): void => {
+                        socket.destroy()
+                    })
+                })
+                let count: number = 0
+                while (server.connections > 0) {
+                    if (count > 4) {
+                        break
                     }
-                )
-
-                server.listen(port, "127.0.0.1")
+                    await sleep(0.2)
+                    count += 1
+                }
+                server.close()
+                console.log("Server closed")
+                db.close()
+                console.log("DB closed")
             }
         )
+
+        server.listen(port, "127.0.0.1")
     } catch (error) {
         console.error(error)
         return FinishState.EXIT_BAD_KILL
