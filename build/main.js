@@ -1,16 +1,12 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.main = exports.FinishState = void 0;
 const http_1 = require("http");
 const uuidv4_1 = require("uuidv4");
 const sqlite3_1 = require("sqlite3");
 const db_1 = require("./db");
 const handler_1 = require("./handler");
 const utils_1 = require("./common/utils");
-const fs_1 = require("fs");
-const path_1 = __importDefault(require("path"));
 // TODO: add doc
 var FinishState;
 (function (FinishState) {
@@ -19,13 +15,8 @@ var FinishState;
     FinishState["EXIT_OK"] = "EXIT_OK";
 })(FinishState = exports.FinishState || (exports.FinishState = {}));
 // TODO: add doc
-function handleBaseRequests(request, response, dbActions, html) {
+function handleBaseRequests(request, response, dbActions) {
     switch (request.method) {
-        case "GET":
-            response.writeHead(200, { "Content-Type": "text/html" });
-            response.write(html);
-            response.end();
-            break;
         case "POST":
             dbActions
                 .createHub()
@@ -112,7 +103,7 @@ function setCors(response) {
     response.setHeader("Access-Control-Allow-Headers", "*");
 }
 // TODO: add doc
-function requestListener(dbActions, handlers, html) {
+function requestListener(dbActions, handlers) {
     return (request, response) => {
         const { url } = request;
         if (!url || url.length > 1024) {
@@ -120,8 +111,8 @@ function requestListener(dbActions, handlers, html) {
             response.statusMessage = "Invalid path";
             response.end();
         }
-        else if (url === "/") {
-            handleBaseRequests(request, response, dbActions, html);
+        else if (url === "/create") {
+            handleBaseRequests(request, response, dbActions);
         }
         else {
             setCors(response);
@@ -140,35 +131,31 @@ function requestListener(dbActions, handlers, html) {
 // TODO: add doc
 async function main(port, dbPath, onExit) {
     try {
-        fs_1.readFile(path_1.default.resolve(__dirname, "..", "static", "page.html"), { encoding: "utf8" }, (err, html) => {
-            if (err)
-                throw err;
-            const handlers = [handler_1.urlHandler()];
-            const db = new sqlite3_1.Database(dbPath);
-            const server = http_1.createServer(requestListener(db_1.getDBActions(db_1.initDb(db)), handlers, html));
-            server.keepAliveTimeout = 0;
-            onExit(async () => {
-                console.log("\nClosing server and DB");
-                server.on("connection", (socket) => {
-                    socket.end("", () => {
-                        socket.destroy();
-                    });
+        const handlers = [handler_1.urlHandler()];
+        const db = new sqlite3_1.Database(dbPath);
+        const server = http_1.createServer(requestListener(db_1.getDBActions(db_1.initDb(db)), handlers));
+        server.keepAliveTimeout = 0;
+        onExit(async () => {
+            console.log("\nClosing server and DB");
+            server.on("connection", (socket) => {
+                socket.end("", () => {
+                    socket.destroy();
                 });
-                let count = 0;
-                while (server.connections > 0) {
-                    if (count > 4) {
-                        break;
-                    }
-                    await utils_1.sleep(0.2);
-                    count += 1;
-                }
-                server.close();
-                console.log("Server closed");
-                db.close();
-                console.log("DB closed");
             });
-            server.listen(port, "127.0.0.1");
+            let count = 0;
+            while (server.connections > 0) {
+                if (count > 4) {
+                    break;
+                }
+                await utils_1.sleep(0.2);
+                count += 1;
+            }
+            server.close();
+            console.log("Server closed");
+            db.close();
+            console.log("DB closed");
         });
+        server.listen(port, "127.0.0.1");
     }
     catch (error) {
         console.error(error);

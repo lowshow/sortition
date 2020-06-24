@@ -1,2 +1,8 @@
+ARGS=$(SORTITION_PORT)
+
+init:
+	NODE_ENV=production npm i 
+	./setupConfig.sh
 run:
-	node build/run_server.js 3333 ~/.noisecrypt/sortition
+	test $(SORTITION_PORT)
+	NODE_ENV=production node build/run_server.js $(SORTITION_PORT) $(HOME)/.sortition

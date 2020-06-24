@@ -7,6 +7,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const main_1 = require("./main");
 const process_1 = __importDefault(require("process"));
 const path_1 = __importDefault(require("path"));
+const fs_1 = __importDefault(require("fs"));
 process_1.default.stdin.resume();
 // TODO: add doc
 function setProcessListener(onExit) {
@@ -61,11 +62,15 @@ function parsePath(maybePath) {
 function run() {
     const state = {
         port: parsePort(process_1.default.argv.slice(2)[0]),
-        dbPath: parsePath(process_1.default.argv.slice(2)[1]),
+        rootDir: parsePath(process_1.default.argv.slice(2)[1]),
         onExit: []
     };
+    const dbPath = path_1.default.join(state.rootDir, "db");
+    if (!fs_1.default.existsSync(dbPath)) {
+        fs_1.default.closeSync(fs_1.default.openSync(dbPath, "w"));
+    }
     setProcessListener(() => state.onExit);
-    main_1.main(state.port, state.dbPath, (fn) => {
+    main_1.main(state.port, dbPath, (fn) => {
         state.onExit.push(fn);
     })
         .then((res) => {

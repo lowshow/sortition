@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.urlHandler = void 0;
 const uuidv4_1 = require("uuidv4");
 // TODO: add doc
 function onDelete(_, response, __) {

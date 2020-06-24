@@ -145,7 +145,10 @@
                 root.classList.add("init")
 
                 function setValues(id) {
-                    hubUrl.textContent = `${window.location.href}${id}`
+                    hubUrl.textContent = new URL(
+                        id,
+                        window.location.href
+                    ).toString()
                     const d = new Date()
                     d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
                     expires.textContent = `Expires: ${d.toLocaleString()}`
@@ -167,7 +170,7 @@
                     root.classList.remove("init")
                     root.classList.add("loading")
 
-                    fetch("", { method: "POST" })
+                    fetch("create", { method: "POST" })
                         .then((data) => data.text())
                         .then(parseId)
                         .then((id) => {
