@@ -123,7 +123,7 @@
             <div class="response" id="response">
                 <p id="hubUrl" class="hubUrl"></p>
                 <button class="copyBtn" id="copyBtn">Copy URL</button>
-                <p id="expires" class="expires"></p>
+                <!-- <p id="expires" class="expires"></p> -->
             </div>
             <p class="error" id="error"></p>
         </div>
@@ -139,7 +139,7 @@
                 const copyBtn = el("#copyBtn")
                 const response = el("#response")
                 const hubUrl = el("#hubUrl")
-                const expires = el("#expires")
+                // const expires = el("#expires")
                 const error = el("#error")
 
                 root.classList.add("init")
@@ -149,9 +149,9 @@
                         id,
                         window.location.href
                     ).toString()
-                    const d = new Date()
-                    d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
-                    expires.textContent = `Expires: ${d.toLocaleString()}`
+                    // const d = new Date()
+                    // d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
+                    // expires.textContent = `Expires: ${d.toLocaleString()}`
                 }
 
                 async function parseId(uuid) {
