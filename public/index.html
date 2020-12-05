@@ -1,213 +1,333 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>sortition &bull; hubs for random-ish values</title>
-        <style>
-            html,
-            body {
-                margin: 0;
-                padding: 0;
-                height: 100%;
-                font-size: 16px;
-                color: white;
-                font-family: Helvetica, Arial, sans-serif;
-            }
 
-            .root .createBtn {
-                display: none;
-            }
-            .root .loader {
-                display: none;
-            }
-            .root .response {
-                display: none;
-            }
-            .root .error {
-                display: none;
-            }
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sortition &bull; hubs for random-ish values</title>
+    <style>
+        :root {
+            --dark-100: #050505;
+            --dark-200: #0a0a0a;
+            --dark-300: #0d0d0d;
+            --off-white: #8caa9d;
+            --darkblue-200: #0a0a1a;
+            --darkblue-250: #0b0b3b;
+            --darkblue-300: #130539;
+            --darkblue-500: #0b0366;
+            --darkpurple-100: #1f002b;
+            --green-100: #072d0f;
+            --green-400: #059121;
+            --anim-time: 200ms;
+            --base-size: 16px;
+            --base-font: 'Courier New', Courier, monospace;
+        }
 
-            .root.init .createBtn {
-                display: block;
-            }
-            .root.loading .loader {
-                display: block;
-            }
-            .root.complete .response {
-                display: block;
-            }
-            .root.error .error {
-                display: block;
-            }
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-size: var(--base-size);
+            color: var(--off-white);
+            font-family: var(--base-font);
+        }
 
-            .root {
-                height: 100%;
-                background: black;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-            }
+        .root .createBtn {
+            display: none;
+        }
 
-            .createBtn,
-            .copyBtn {
-                font-size: 1.2rem;
-                padding: 1rem;
-                border-radius: 4px;
-                background: transparent;
-                color: white;
-                border: solid 2px white;
-                margin: 0;
-                cursor: pointer;
-                transition: background 500ms;
-            }
+        .root .loader {
+            display: none;
+        }
 
-            .createBtn:hover,
-            .copyBtn:hover {
-                background: #222;
-            }
+        .root .response {
+            display: none;
+        }
 
-            .loader {
-                display: inline-block;
-                position: relative;
-                width: 80px;
-                height: 80px;
-            }
-            .loader div {
-                position: absolute;
-                border: 4px solid #fff;
+        .root .error {
+            display: none;
+        }
+
+        .root.init .createBtn {
+            display: block;
+        }
+
+        .root.loading .loader {
+            display: block;
+        }
+
+        .root.complete .response {
+            display: block;
+        }
+
+        .root.error .error {
+            display: block;
+        }
+
+        .root {
+            height: 100%;
+            background: var(--dark-300);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .createBtn,
+        .copyBtn {
+            color: var(--off-white);
+            border: none;
+            padding: 1rem;
+            text-align: center;
+            font-size: 1rem;
+            background: var(--darkblue-300);
+            cursor: pointer;
+            font-family: var(--base-font);
+            border-bottom: 3px solid var(--darkblue-500);
+            border-top: 0px solid transparent;
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+            border-top-left-radius: 2px;
+            border-top-right-radius: 2px;
+            position: relative;
+            transition: filter var(--anim-time) ease-in-out;
+        }
+
+        .createBtn:hover,
+        .copyBtn:hover {
+            filter: brightness(1.5);
+        }
+
+        .createBtn:focus,
+        .copyBtn:focus {
+            outline: none;
+        }
+
+        .createBtn:active,
+        .copyBtn:active {
+            border-top-width: 3px;
+            border-bottom-width: 0px;
+        }
+
+        .loader {
+            display: inline-block;
+            position: relative;
+            width: 80px;
+            height: 80px;
+        }
+
+        .loader div {
+            position: absolute;
+            border: 4px solid var(--off-white);
+            opacity: 1;
+            border-radius: 50%;
+            animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+
+        .loader div:nth-child(2) {
+            animation-delay: -0.5s;
+        }
+
+        @keyframes loader {
+            0% {
+                top: 36px;
+                left: 36px;
+                width: 0;
+                height: 0;
                 opacity: 1;
-                border-radius: 50%;
-                animation: loader 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
-            }
-            .loader div:nth-child(2) {
-                animation-delay: -0.5s;
-            }
-            @keyframes loader {
-                0% {
-                    top: 36px;
-                    left: 36px;
-                    width: 0;
-                    height: 0;
-                    opacity: 1;
-                }
-                100% {
-                    top: 0px;
-                    left: 0px;
-                    width: 72px;
-                    height: 72px;
-                    opacity: 0;
-                }
-            }
-            .response {
-                text-align: center;
             }
 
-            .hubUrl,
-            .expires {
-                margin: 0;
-                padding: 2rem 0;
+            100% {
+                top: 0px;
+                left: 0px;
+                width: 72px;
+                height: 72px;
+                opacity: 0;
             }
-        </style>
-    </head>
-    <body>
-        <div id="root" class="root">
-            <noscript>
-                Unfortunately, without JavaScript, you cannot use this app.
-            </noscript>
-            <button class="createBtn" id="createBtn">Create New Hub</button>
-            <div class="loader" id="loader">
-                <div></div>
-                <div></div>
-            </div>
-            <div class="response" id="response">
-                <p id="hubUrl" class="hubUrl"></p>
-                <button class="copyBtn" id="copyBtn">Copy URL</button>
-                <!-- <p id="expires" class="expires"></p> -->
-            </div>
-            <p class="error" id="error"></p>
+        }
+
+        .response {
+            text-align: center;
+        }
+
+        .hubUrl,
+        .expires {
+            margin: 0;
+            padding: 2rem 0;
+        }
+
+        select {
+            padding: 0.5rem;
+            background: var(--dark-200);
+            color: var(--off-white);
+            font-size: var(--base-size);
+            font-family: var(--base-font);
+            border: 1px solid var(--green-100);
+            max-width: calc(100% - 2rem);
+            margin: 2rem auto;
+            overflow: hidden;
+            white-space: pre;
+            text-overflow: ellipsis;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="root" class="root">
+        <noscript>
+            Unfortunately, without JavaScript, you cannot use this app.
+        </noscript>
+        <button class="createBtn" id="createBtn">Create New Hub</button>
+        <div class="loader" id="loader">
+            <div></div>
+            <div></div>
         </div>
-        <script>
-            ;(() => {
-                function el(selector) {
-                    return document.querySelector(selector)
+        <div class="response" id="response">
+            <p id="hubUrl" class="hubUrl"></p>
+            <button class="copyBtn" id="copyBtn">Copy URL</button>
+            <!-- <p id="expires" class="expires"></p> -->
+        </div>
+        <p class="error" id="error"></p>
+        <select id="list">
+            <option value="">Select a URL to copy to clipboard</option>
+        </select>
+    </div>
+    <script>
+        ; (() => {
+            function el(selector) {
+                return document.querySelector(selector)
+            }
+
+            const root = el("#root")
+            const createBtn = el("#createBtn")
+            const loader = el("#loader")
+            const copyBtn = el("#copyBtn")
+            const response = el("#response")
+            const hubUrl = el("#hubUrl")
+            // const expires = el("#expires")
+            const error = el("#error")
+            const list = el("#list")
+
+            root.classList.add("init")
+
+            function id2URL(id) {
+                return new URL(
+                    id,
+                    window.location.href
+                ).toString()
+            }
+
+            function setValues(id) {
+                hubUrl.textContent = id2URL(id)
+                // const d = new Date()
+                // d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
+                // expires.textContent = `Expires: ${d.toLocaleString()}`
+            }
+
+            async function parseId(uuid) {
+                let s = "" + uuid
+
+                s = s.match(
+                    "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+                )
+                if (s === null) {
+                    throw Error("Data is malformed.")
                 }
+                return uuid
+            }
 
-                const root = el("#root")
-                const createBtn = el("#createBtn")
-                const loader = el("#loader")
-                const copyBtn = el("#copyBtn")
-                const response = el("#response")
-                const hubUrl = el("#hubUrl")
-                // const expires = el("#expires")
-                const error = el("#error")
+            function saveStorage(url) {
+                const hubs = loadStorage()
+                localStorage.setItem("hubs", JSON.stringify([url, ...hubs]))
+            }
 
-                root.classList.add("init")
-
-                function setValues(id) {
-                    hubUrl.textContent = new URL(
-                        id,
-                        window.location.href
-                    ).toString()
-                    // const d = new Date()
-                    // d.setTime(d.getTime() + 4 * 60 * 60 * 1000)
-                    // expires.textContent = `Expires: ${d.toLocaleString()}`
+            function loadStorage() {
+                const hubs = localStorage.getItem("hubs")
+                if (!hubs) return []
+                try {
+                    return JSON.parse(hubs)
+                } catch {
+                    return []
                 }
+            }
 
-                async function parseId(uuid) {
-                    let s = "" + uuid
-
-                    s = s.match(
-                        "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-                    )
-                    if (s === null) {
-                        throw Error("Data is malformed.")
-                    }
-                    return uuid
-                }
-
-                createBtn.addEventListener("click", () => {
-                    root.classList.remove("init")
-                    root.classList.add("loading")
-
-                    fetch("create", { method: "POST" })
-                        .then((data) => data.text())
-                        .then(parseId)
-                        .then((id) => {
-                            setValues(id)
-                            root.classList.remove("loading")
-                            root.classList.add("complete")
-                        })
-                        .catch((err) => {
-                            root.classList.remove("loading")
-                            root.classList.add("error")
-                            error.textContent = err.message
-                        })
+            function setList() {
+                const hubs = loadStorage()
+                if (!hubs || hubs.length === 0) return
+                const f = new DocumentFragment()
+                hubs.forEach(hub => {
+                    const opt = document.createElement("option")
+                    const txt = id2URL(hub)
+                    opt.value = txt
+                    opt.textContent = txt
+                    f.appendChild(opt)
                 })
+                while (list.children.length > 1) {
+                    list.removeChild(list.children[1]);
+                }
+                list.appendChild(f)
+            }
 
-                copyBtn.addEventListener("click", () => {
-                    const el = document.createElement("textarea")
-                    el.value = hubUrl.textContent
-                    el.setAttribute("readonly", "")
-                    el.style.position = "absolute"
-                    el.style.left = "-9999px"
-                    document.body.appendChild(el)
-                    const sel = document.getSelection()
-                    const selected =
-                        sel !== null && sel.rangeCount > 0
-                            ? sel.getRangeAt(0)
-                            : false
-                    el.select()
-                    document.execCommand("copy")
-                    document.body.removeChild(el)
-                    if (sel && selected) {
-                        sel.removeAllRanges()
-                        sel.addRange(selected)
-                    }
+            function copyToClip(url) {
+                const el = document.createElement("textarea")
+                el.value = url
+                el.setAttribute("readonly", "")
+                el.style.position = "absolute"
+                el.style.left = "-9999px"
+                document.body.appendChild(el)
+                const sel = document.getSelection()
+                const selected =
+                    sel !== null && sel.rangeCount > 0
+                        ? sel.getRangeAt(0)
+                        : false
+                el.select()
+                document.execCommand("copy")
+                document.body.removeChild(el)
+                if (sel && selected) {
+                    sel.removeAllRanges()
+                    sel.addRange(selected)
+                }
+            }
 
-                    copyBtn.textContent = "Copied!"
-                })
-            })()
-        </script>
-    </body>
+            createBtn.addEventListener("click", () => {
+                root.classList.remove("init")
+                root.classList.add("loading")
+
+                fetch("create", { method: "POST" })
+                    .then((data) => data.text())
+                    .then(parseId)
+                    .then((id) => {
+                        setValues(id)
+                        saveStorage(id)
+                        setList()
+                        root.classList.remove("loading")
+                        root.classList.add("complete")
+                    })
+                    .catch((err) => {
+                        root.classList.remove("loading")
+                        root.classList.add("error")
+                        error.textContent = err.message
+                    })
+            })
+
+            copyBtn.addEventListener("click", () => {
+                copyToClip(hubUrl.textContent)
+
+                copyBtn.textContent = "Copied!"
+
+                setTimeout(() => {
+                    copyBtn.textContent = "Copy URL"
+                }, 2000)
+            })
+
+            list.addEventListener("change", () => {
+                copyToClip(list.value)
+            })
+
+            setList()
+        })()
+    </script>
+</body>
+
 </html>
